@@ -65,6 +65,20 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+router.get("/:ticketNumber", async (req, res) => {
+  try {
+    const ticket = await Ticket.findOne({
+      ticketNumber: req.params.ticketNumber,
+    });
+    if (!ticket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+    res.json(ticket);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Get all tickets for a specific board
 router.get("/board/:boardId", async (req, res) => {
   const { boardId } = req.params;
