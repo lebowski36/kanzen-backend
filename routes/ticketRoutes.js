@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Ticket = require("../models/Tickets");
 const Board = require("../models/Board");
+const Counter = require("../models/Counter");
 
 // Create a new ticket
 router.post("/", async (req, res) => {
@@ -15,8 +16,13 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: "Board not found" });
     }
 
-    const ticketCount = await Ticket.countDocuments({ board });
-    const ticketNumber = `${boardData.prefix}-${ticketCount + 1}`;
+    const counter = await Counter.findOneAndUpdate(
+      { board },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
+    const ticketNumber = `${boardData.prefix}-${counter.seq}`;
 
     const ticket = new Ticket({
       title,
