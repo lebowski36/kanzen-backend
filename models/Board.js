@@ -9,9 +9,9 @@ const BoardSchema = new mongoose.Schema({
     minlength: 1,
     maxlength: 5,
     unique: true,
-  }, // New field
+  },
   createdAt: { type: Date, default: Date.now },
-  columns: { type: [String], default: ["To Do", "In Progress", "Done"] }, // Add default columns
+  columns: { type: [String], default: ["To Do", "In Progress", "Done"] }, // Handle columns array
 });
 
 module.exports = mongoose.model("Board", BoardSchema);

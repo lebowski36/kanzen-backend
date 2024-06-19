@@ -4,9 +4,9 @@ const Board = require("../models/Board");
 
 // Create a new board
 router.post("/", async (req, res) => {
-  const { name, description, prefix } = req.body;
+  const { name, description, prefix, columns } = req.body; // Accept columns
   try {
-    const board = new Board({ name, description, prefix });
+    const board = new Board({ name, description, prefix, columns }); // Save columns
     await board.save();
     res.status(201).json(board);
   } catch (err) {
