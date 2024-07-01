@@ -20,6 +20,11 @@ router.post("/", async (req, res) => {
     await board.save();
     res.status(201).json(board);
   } catch (err) {
+    if (err.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: "Prefix already in use for this user." });
+    }
     res.status(400).json({ error: err.message });
   }
 });
@@ -79,12 +84,10 @@ router.delete("/:id", async (req, res) => {
       user: req.user._id,
     });
     if (!board) {
-      return res
-        .status(404)
-        .json({
-          error:
-            "Board not found or you do not have permission to delete this board",
-        });
+      return res.status(404).json({
+        error:
+          "Board not found or you do not have permission to delete this board",
+      });
     }
     res.status(204).send(); // No content
   } catch (err) {
