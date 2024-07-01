@@ -1,8 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const Ticket = require("../models/Tickets");
+const Ticket = require("../models/Ticket");
 const Board = require("../models/Board");
 const Counter = require("../models/Counter");
+const authMiddleware = require("../middleware/authMiddleware");
+
+// Protect routes with authMiddleware
+router.use(authMiddleware);
 
 // Create a new ticket
 router.post("/", async (req, res) => {
@@ -11,19 +15,16 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "Title is required" });
   }
   try {
-    const boardData = await Board.findById(board);
+    const boardData = await Board.findOne({ _id: board, user: req.user._id });
     if (!boardData) {
       return res.status(404).json({ error: "Board not found" });
     }
-
     const counter = await Counter.findOneAndUpdate(
       { board },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
-
     const ticketNumber = `${boardData.prefix}-${counter.seq}`;
-
     const ticket = new Ticket({
       title,
       description,
@@ -32,8 +33,8 @@ router.post("/", async (req, res) => {
       assignee,
       dueDate,
       ticketNumber,
+      user: req.user._id,
     });
-
     await ticket.save();
     res.status(201).json(ticket);
   } catch (err) {
@@ -50,8 +51,8 @@ router.put("/:id", async (req, res) => {
   const { title, description, status, board, assignee, dueDate } = req.body;
   try {
     const sanitizedDescription = sanitizeHtml(description);
-    const ticket = await Ticket.findByIdAndUpdate(
-      id,
+    const ticket = await Ticket.findOneAndUpdate(
+      { _id: id, user: req.user._id },
       {
         title,
         description: sanitizedDescription,
@@ -63,7 +64,9 @@ router.put("/:id", async (req, res) => {
       { new: true }
     );
     if (!ticket) {
-      return res.status(404).json({ error: "Ticket not found" });
+      return res
+        .status(404)
+        .json({ error: "Ticket not found or unauthorized" });
     }
     res.json(ticket);
   } catch (err) {
@@ -75,9 +78,12 @@ router.get("/:ticketNumber", async (req, res) => {
   try {
     const ticket = await Ticket.findOne({
       ticketNumber: req.params.ticketNumber,
+      user: req.user._id,
     });
     if (!ticket) {
-      return res.status(404).json({ message: "Ticket not found" });
+      return res
+        .status(404)
+        .json({ message: "Ticket not found or unauthorized" });
     }
     res.json(ticket);
   } catch (error) {
@@ -87,9 +93,15 @@ router.get("/:ticketNumber", async (req, res) => {
 
 // Get all tickets for a specific board
 router.get("/board/:boardId", async (req, res) => {
-  const { boardId } = req.params;
   try {
-    const tickets = await Ticket.find({ board: boardId });
+    const board = await Board.findOne({
+      _id: req.params.boardId,
+      user: req.user._id,
+    });
+    if (!board) {
+      return res.status(404).json({ error: "Board not found" });
+    }
+    const tickets = await Ticket.find({ board: board._id, user: req.user._id });
     res.json(tickets);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -100,9 +112,14 @@ router.get("/board/:boardId", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const ticket = await Ticket.findByIdAndDelete(id);
+    const ticket = await Ticket.findOneAndDelete({
+      _id: id,
+      user: req.user._id,
+    });
     if (!ticket) {
-      return res.status(404).json({ error: "Ticket not found" });
+      return res
+        .status(404)
+        .json({ error: "Ticket not found or unauthorized" });
     }
     res.status(204).send(); // No content
   } catch (err) {

@@ -10,6 +10,7 @@ const TicketSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   linkedTickets: [{ type: mongoose.Schema.Types.ObjectId, ref: "Ticket" }],
   ticketNumber: { type: String, required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
 
 module.exports = mongoose.model("Ticket", TicketSchema);

@@ -12,6 +12,7 @@ const BoardSchema = new mongoose.Schema({
   },
   createdAt: { type: Date, default: Date.now },
   columns: { type: [String], default: ["To Do", "In Progress", "Done"] }, // Handle columns array
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 });
 
 module.exports = mongoose.model("Board", BoardSchema);
