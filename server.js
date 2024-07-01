@@ -6,18 +6,25 @@ const cors = require("cors");
 dotenv.config();
 
 const app = express();
+
 app.use(express.json());
 app.use(
   cors({
     origin: "http://localhost:8080",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   })
 );
 
 // Import routes
+
+const authRoutes = require("./routes/authRoutes");
 const boardRoutes = require("./routes/boardRoutes");
 const ticketRoutes = require("./routes/ticketRoutes");
 
 // Use routes
+
+app.use("/api/auth", authRoutes);
 app.use("/api/boards", boardRoutes);
 app.use("/api/tickets", ticketRoutes);
 
