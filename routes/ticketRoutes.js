@@ -15,10 +15,14 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "Title is required" });
   }
   try {
+    // Check if the user has access to the board
     const boardData = await Board.findOne({ _id: board, user: req.user._id });
     if (!boardData) {
-      return res.status(404).json({ error: "Board not found" });
+      return res
+        .status(404)
+        .json({ error: "Board not found or access denied" });
     }
+
     const counter = await Counter.findOneAndUpdate(
       { board },
       { $inc: { seq: 1 } },
